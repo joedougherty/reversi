@@ -41,15 +41,15 @@ class Board:
         return self.BLACK
 
     def is_empty(self, position):
-        return self.matrix[position[0]][position[1]] == self.EMPTY
-
-    def is_out_of_bounds(self, position):
-        return (position[0] < 0 or position[1] < 0 or position[0] > 7 or position[1] > 7)
+        try:
+            return self.matrix[position[0]][position[1]] == self.EMPTY
+        except IndexError:
+            print('offending position: {}'.format(position))
 
     def check_legality(self, position, current_player, direction):
         next_spot = direction(position)
 
-        if self.is_out_of_bounds(next_spot):
+        if next_spot[0] < 0 or next_spot[1] < 0 or next_spot[0] > 7 or next_spot[1] > 7:
             return False
         elif self.is_empty(next_spot):
             return False
@@ -77,7 +77,7 @@ class Board:
     def set_spot(self, position, color_to_set):
         self.matrix[position[0]][position[1]] = color_to_set
 
-    def update_board(self, spot_to_claim, color_to_set, legal_moves):
+    def update(self, spot_to_claim, color_to_set, legal_moves):
         self.set_spot(spot_to_claim, color_to_set) 
         for move in [x for x in legal_moves if x.coordinates == spot_to_claim]:
             spot = move.origin
