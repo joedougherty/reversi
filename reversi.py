@@ -6,7 +6,7 @@ def alternate_player(current_player):
     return board.BLACK
 
 def render(board_matrix):
-    hr = '---------------------------------'
+    hr = '-------------------------'
     print(hr)
     for row in board_matrix:
         row = '|' + '|'.join(row) + '|'
@@ -30,7 +30,7 @@ while legal_moves != []:
     render(board.matrix)
     print("{}: it's your move.".format(current_player))
     print("Your possible moves: {}".format([x.coordinates for x in legal_moves]))
-
+    
     while proposed_move not in [x.coordinates for x in legal_moves]:
         proposed_move = validate_proposed_move(raw_input('Propose a move:'))
 

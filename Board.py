@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from collections import namedtuple
 from directions import north, east, south, west, \
                     northeast, northwest, southeast, southwest
@@ -6,9 +8,9 @@ legalmove = namedtuple('legalmove', ['coordinates', 'direction', 'origin'])
 
 class Board:
     def __init__(self):
-        self.BLACK = ' B '
-        self.WHITE = ' W '
-        self.EMPTY = '   '
+        self.BLACK = '○ '
+        self.WHITE = '● '
+        self.EMPTY = '  '
 
         self.allowedvalues = (self.BLACK, self.WHITE, self.EMPTY)
 
@@ -43,19 +45,30 @@ class Board:
     def is_empty(self, position):
         try:
             return self.matrix[position[0]][position[1]] == self.EMPTY
-        except IndexError:
-            print('offending position: {}'.format(position))
+        except:
+            print('offending position {}'.format(position))
+
+    def is_out_of_bounds(self, position):
+        return position[0] < 0 or position[1] < 0 or position[0] > 7 or position[1] > 7
+
+    def is_on_perimeter(self, position):
+        perimeter_values = (0,7)
+        return position[0] in perimeter_values or position[1] in perimeter_values
 
     def check_legality(self, position, current_player, direction):
         next_spot = direction(position)
 
-        if next_spot[0] < 0 or next_spot[1] < 0 or next_spot[0] > 7 or next_spot[1] > 7:
+        if self.is_out_of_bounds(next_spot):
+            return False
+        elif self.is_on_perimeter(position):
             return False
         elif self.is_empty(next_spot):
             return False
         elif self.reveal(next_spot) == current_player:
             return False
-        elif self.reveal(next_spot) == self.opposing_color(current_player) and self.is_empty(direction(next_spot)):
+        elif (self.reveal(next_spot) == self.opposing_color(current_player) 
+            and self.is_empty(direction(next_spot))
+            and not self.is_out_of_bounds(direction(next_spot))):
             # If next spot is the opposing color and the spot beyond that is empty
             return legalmove(direction(next_spot), direction, position)
         elif self.reveal(next_spot) == self.opposing_color(current_player):
