@@ -43,10 +43,7 @@ class Board:
         return self.BLACK
 
     def is_empty(self, position):
-        try:
-            return self.matrix[position[0]][position[1]] == self.EMPTY
-        except:
-            print('offending position {}'.format(position))
+        return self.matrix[position[0]][position[1]] == self.EMPTY
 
     def is_out_of_bounds(self, position):
         return position[0] < 0 or position[1] < 0 or position[0] > 7 or position[1] > 7
