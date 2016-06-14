@@ -41,6 +41,7 @@ while legal_moves != []:
     current_player = alternate_player(current_player)
     legal_moves = board.find_legal_moves(current_player)
 
+render(board.matrix)
 print('Black pieces: {}'.format(board.count_pieces(board.BLACK)))
 print('White pieces: {}'.format(board.count_pieces(board.WHITE)))
 
