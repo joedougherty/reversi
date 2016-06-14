@@ -43,7 +43,10 @@ class Board:
         return self.BLACK
 
     def is_empty(self, position):
-        return self.matrix[position[0]][position[1]] == self.EMPTY
+        try:
+            return self.matrix[position[0]][position[1]] == self.EMPTY
+        except IndexError:
+            print('** DEBUG ** position passed in was: {}'.format(position))
 
     def is_out_of_bounds(self, position):
         return position[0] < 0 or position[1] < 0 or position[0] > 7 or position[1] > 7
@@ -57,26 +60,25 @@ class Board:
 
         if self.is_out_of_bounds(next_spot):
             return False
-        elif self.is_on_perimeter(position):
-            return False
         elif self.is_empty(next_spot):
             return False
         elif self.reveal(next_spot) == current_player:
             return False
         elif (self.reveal(next_spot) == self.opposing_color(current_player) 
-            and self.is_empty(direction(next_spot))
-            and not self.is_out_of_bounds(direction(next_spot))):
+            and not self.is_out_of_bounds(direction(next_spot))
+            and self.is_empty(direction(next_spot))):
             # If next spot is the opposing color and the spot beyond that is empty
             return legalmove(direction(next_spot), direction, position)
         elif self.reveal(next_spot) == self.opposing_color(current_player):
-            return self.check_legality(direction(next_spot), current_player, direction)
+            return self.check_legality(next_spot, current_player, direction)
         else:
             raise Exception('Edge case encountered! Original position was: {} and direction was {}'.format(position, direction.func_name)) 
 
     def find_legal_moves(self, current_player):
         """ Search all eight directions. """
         legal_moves = [] 
-        for spot in self.find_pieces(current_player):
+        found_pieces = self.find_pieces(current_player)
+        for spot in found_pieces:
             for direction in (north, south, east, west, northeast, southeast, northwest, southwest):
                 legal = self.check_legality(spot, current_player, direction)
                 if legal != False:
@@ -95,3 +97,14 @@ class Board:
                 self.set_spot(spot, color_to_set)
                 spot = move.direction(spot)
 
+    def count_pieces(self, color):
+        count = 0
+        for row in self.matrix:
+            for col in row:
+                if col == color:
+                    count = count + 1
+
+        return count
+
+    def dump_machine_representation(self):
+        print(self.matrix)

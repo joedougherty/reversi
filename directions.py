@@ -5,10 +5,10 @@ def south(position):
     return (position[0]+1, position[1])
 
 def east(position):
-    return (position[0], position[1]-1)
+    return (position[0], position[1]+1)
 
 def west(position):
-    return (position[0], position[1]+1)
+    return (position[0], position[1]-1)
 
 def northwest(position):
     return north(west(position))
