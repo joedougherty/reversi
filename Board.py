@@ -43,17 +43,10 @@ class Board:
         return self.BLACK
 
     def is_empty(self, position):
-        try:
-            return self.matrix[position[0]][position[1]] == self.EMPTY
-        except IndexError:
-            print('** DEBUG ** position passed in was: {}'.format(position))
+        return self.matrix[position[0]][position[1]] == self.EMPTY
 
     def is_out_of_bounds(self, position):
         return position[0] < 0 or position[1] < 0 or position[0] > 7 or position[1] > 7
-
-    def is_on_perimeter(self, position):
-        perimeter_values = (0,7)
-        return position[0] in perimeter_values or position[1] in perimeter_values
 
     def check_legality(self, position, current_player, direction):
         next_spot = direction(position)
