@@ -1,5 +1,6 @@
 import socket, threading
 from collections import namedtuple
+from Game import Game
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('', 1911))
@@ -7,8 +8,7 @@ s.listen(4) # 4 What?
 clients = [] #list of clients connected
 lock = threading.Lock()
 
-### HAHAHA I HAVE NO IDEA WHAT I'M DOING ###
-games = [1,2,3]
+games = {}
 
 class chatServer(threading.Thread):
     def __init__(self, (socket,address), enable_lock=True):
@@ -16,12 +16,13 @@ class chatServer(threading.Thread):
         self.socket = socket
         self.address = address
         self.enable_lock = enable_lock
-        self.COMMANDS = {'list': 
-            {'help': 'List open games.',
-             'command': self.list},
+        self.COMMANDS = {'list': {'help': 'List open games.', 'command': self.list},
             'help':
-            {'help': 'Prints a help message about available commands (including this one!)',
-             'command': self.help},
+                {'help': 'Prints a help message about available commands (including this one!)', 'command': self.help},
+            'create':
+                {'help': 'Create a new game', 'command': self.create_game},
+            'join':
+                {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
             }
 
     def run(self):
@@ -70,19 +71,47 @@ class chatServer(threading.Thread):
             msg += "Use 'help' to list commands.\n"
             self.socket.send(msg)
         else:
-            if len(user_command) > 1:
-                self.COMMANDS.get(user_command[0]).get('command')(user_command[1:])
-            else:
-                self.COMMANDS.get(user_command[0]).get('command')()
+            self.COMMANDS.get(user_command[0]).get('command')(user_command[1:])
 
-    def list(self):
-        for game in games:
-            self.socket.send(str(game)+'\n')
+    def list(self, *args):
+        if games == {}:
+            self.socket.send('No games exist yet!\n')
+        else:
+            for game in games.keys():
+                self.socket.send(str(game)+'\n')
 
-    def help(self):
+    def help(self, *args):
         for key in self.COMMANDS.keys():
             self.socket.send('{}: {}'.format(key, self.COMMANDS.get(key).get('help')) + '\n')
 
+    def create_game(self, args=[]):
+        if args == []:
+            self.socket.send("Please provide a name for the game.\n")
+            return False
+
+        game = Game(player_one=self)
+        # TODO: Ensure users can't add a game that already exists (by name)
+        game_name = args[0].strip()
+
+        games[game_name] = game
+
+        self.socket.send("Game '{}' has been created.\n".format(game_name))
+        self.socket.send('Wating for a second player to join...\n')
+
+    def join_game(self, args=[]):
+        if args == []:
+            self.socket.send("Please name a game to join.\n")
+            return False
+
+        game_name = args[0].strip()
+        if game_name not in games.keys():
+            self.socket.send("Sorry could not find the game '{}'\n".format(game_name))
+        else:
+            games[game_name].player_two = self # Set player two
+            self.play_game(games[game_name])
+        
+    def play_game(self, game):
+        game.main()
 
 while True: # wait for socket to connect
     # send socket to chatserver and start monitoring
