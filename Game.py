@@ -16,12 +16,29 @@ class Game:
         for client in (self.player_one.socket, self.player_two.socket):
             client.send(message + '\n')
 
+    def render(self, board_matrix):
+        board_rep = ''
+        hr = '-------------------------\n'
+
+        board_rep += hr
+        for row in board_matrix:
+            board_rep += '|' + '|'.join(row) + '|\n'
+            board_rep += hr
+
+        return board_rep
+
+    def alternate_player(self):
+        pass
+
     def main(self):
         self.broadcast('So it shall begin!\n')
+        self.broadcast(self.render(self.board.matrix))
 
         """
         while self.legal_moves != []:
-            render(board.matrix)
+            self.broadcast(self.render(self.board.matrix))
+            
+            # Send this only to the current player
             print("{}: it's your move.".format(current_player))
             print("Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))
             
