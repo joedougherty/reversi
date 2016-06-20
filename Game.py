@@ -34,17 +34,63 @@ class Game:
         try:
             return (int(proposed_move[0]), int(proposed_move[2]))
         except:
-            print("Move must be in row,col format. Ex: 5,4") 
+            return False
 
     def send(self, player, msg):
         player.socket.send(msg + '\n')
 
-    def receive_move(self, data):
-        self.broadcast("I received a move! The move I received was {}".format(data))
-        self.received_move = data.strip()
+    def receive_move(self, data, player_object):
+        received_move = data.strip()
 
-    def check_received_move(self):
-        return self.received_move
+        # Is it from the correct player?
+        if player_object != self.current_player:
+            player_object.socket.send("Hold your horses! It's not your turn yet :)\n")
+            return False
+
+        # Is it a valid (syntactically, that is) move?
+        proposed_move = self.validate_proposed_move(received_move)
+        if not proposed_move:
+            self.current_player.socket.send("Move must be in row,col format. Ex: 5,4\n") 
+            return False
+
+        # Is it legal?
+        legal_moves = self.board.find_legal_moves(self.current_player.color)
+        if proposed_move not in [x.coordinates for x in legal_moves]:
+            self.current_player.socket.send("Sorry, that's not a legal move.\n")
+            return False
+
+        # Update board
+        self.board.update(proposed_move, self.current_player.color, legal_moves)  
+        self.broadcast(self.render(self.board.matrix))
+
+        # Make sure your opponent still has some possible moves left
+        # If so, set the current player to your opponent
+        opposing_player = self.alternate_player(self.current_player)
+        if self.board.find_legal_moves(self.alternate_player(self.current_player.color)) != []:
+            self.current_player = opposing_player
+
+        # Was that the final move?
+        if self.this_is_the_final_board():
+            self.broadcast("Game over! Here's the score:\n")
+            # TODO self.remove players from game
+            return False
+        else:
+            self.send(self.current_player, "{}: it's your move.".format(self.current_player.color))
+            legal_moves = self.board.find_legal_moves(self.current_player.color)
+            self.send(self.current_player, "Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))
+    
+    def this_is_the_final_board(self):
+        """ If after you move:
+                * your opponent has no legal moves
+                * you have no legal moves
+            then the game is over, even if there are empty spots left.
+        """
+        opposing_player = self.alternate_player(self.current_player.color)
+
+        if self.board.find_legal_moves(opposing_player) == [] and \
+        self.board.find_legal_moves(self.current_player.color) == []:
+            return True
+        return False
 
     def main(self):
         # Don't forget to assign player two their piece color!
@@ -52,34 +98,10 @@ class Game:
 
         self.broadcast('So it shall begin!\n')
 
-        current_player = self.player_one # Black moves first
-        legal_moves = self.board.find_legal_moves(current_player.color)
+        self.current_player = self.player_one # Black moves first
 
-        proposed_move = False
-
-        while legal_moves != []:
-
-            self.broadcast(self.render(self.board.matrix))
+        self.broadcast(self.render(self.board.matrix))
             
-            # Send this only to the current player
-            self.send(current_player, "{}: it's your move.".format(current_player.color))
-            self.send(current_player, "Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))
-            
-            # TODO
-            # Find a while to model the input validation that doesn't 
-            # require a while loop
-
-            """
-            A while loop doesn't quite make sense here given the distributed, networked nature.
-
-            while proposed_move not in [x.coordinates for x in legal_moves]:
-                self.send(current_player, 'Propose a move:')
-                proposed_move = self.validate_proposed_move(self.check_received_move())
-            """
-
-            self.board.update(proposed_move, current_player, legal_moves)  
-            current_player = self.alternate_player(current_player)
-            legal_moves = self.board.find_legal_moves(current_player)
-
-        # Broadcast final board and score to both players
-        # self.broadcast(self.render(self.board.matrix))
+        self.send(self.current_player, "{}: it's your move.".format(self.current_player.color))
+        legal_moves = self.board.find_legal_moves(self.current_player.color)
+        self.send(self.current_player, "Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))

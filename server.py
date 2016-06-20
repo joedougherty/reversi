@@ -1,6 +1,7 @@
 import socket, threading
 from collections import namedtuple
 from Game import Game
+import sys
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('', 1911))
@@ -23,6 +24,10 @@ class gameServer(threading.Thread):
                 {'help': 'Create a new game', 'command': self.create_game},
             'join':
                 {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
+            'exit':
+                {'help': 'Hop off the game server.', 'command': self.quit},
+            'quit':
+                {'help': 'Hop off the game server.', 'command': self.quit},
             }
         
         # Flag to maintain whether player is 
@@ -50,7 +55,7 @@ class gameServer(threading.Thread):
             if not data:
                 break
 
-            self.route_input(data)
+            self.route_input(data, self)
 
         self.socket.close()
         print '%s:%s disconnected.' % self.address
@@ -80,16 +85,16 @@ class gameServer(threading.Thread):
         else:
             self.COMMANDS.get(user_command[0]).get('command')(user_command[1:])
 
-    def route_input(self, data):
+    def route_input(self, data, reference_to_player):
         """ 
         If the user is playing a game, their input should only be sent
         to that game. 
         
         This prevents users from creating concurrent games, and generally helps
-        to avoid some tricky input routing issues.
+        to avoid some tricky input issues.
         """
         if self.player_is_in_a_game():
-            self.current_game.receive_move(data)
+            self.current_game.receive_move(data, reference_to_player)
         else:
             self.run_command(data)
 
@@ -130,6 +135,7 @@ class gameServer(threading.Thread):
             self.socket.send("Sorry could not find the game '{}'\n".format(game_name))
         else:
             games[game_name].player_two = self # Set player two
+            self.current_game = games[game_name]
             self.play_game(games[game_name])
         
     def play_game(self, game):
@@ -139,6 +145,12 @@ class gameServer(threading.Thread):
         if self.current_game is not None:
             return True
         return False
+
+    def quit(self, *args):
+        # TODO
+        # * remove current player from any existing games
+        # * maybe there are other things to clean up? (almost certainly)
+        sys.exit(0)
 
 while True: # wait for socket to connect
     gameServer(s.accept(), enable_lock=True).start()
