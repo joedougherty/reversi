@@ -72,8 +72,8 @@ class Game:
         # Was that the final move?
         if self.this_is_the_final_board():
             self.broadcast("Game over! Here's the score:\n")
-            self.broadcast('Black pieces: {}'.format(board.count_pieces(board.BLACK)))
-            self.broadcast('White pieces: {}'.format(board.count_pieces(board.WHITE)))
+            self.broadcast('Black pieces: {}'.format(self.board.count_pieces(board.BLACK)))
+            self.broadcast('White pieces: {}'.format(self.board.count_pieces(board.WHITE)))
 
             # Remove the game from the global games dict
             self.player_one.remove_finished_game()
