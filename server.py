@@ -133,13 +133,17 @@ class gameServer(threading.Thread):
         game_name = args[0].strip()
         if game_name not in games.keys():
             self.socket.send("Sorry could not find the game '{}'\n".format(game_name))
+        elif games[game_name].player_two != None:
+            # Game already has two players!
+            self.socket.send("Sorry! Game already has two players!")
+            return False
         else:
             games[game_name].player_two = self # Set player two
             self.current_game = games[game_name]
             self.play_game(games[game_name])
         
     def play_game(self, game):
-        game.main()
+        game.start()
 
     def player_is_in_a_game(self):
         if self.current_game is not None:

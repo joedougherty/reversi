@@ -66,7 +66,7 @@ class Game:
         # Make sure your opponent still has some possible moves left
         # If so, set the current player to your opponent
         opposing_player = self.alternate_player(self.current_player)
-        if self.board.find_legal_moves(self.alternate_player(self.current_player.color)) != []:
+        if self.board.find_legal_moves(opposing_player.color) != []:
             self.current_player = opposing_player
 
         # Was that the final move?
@@ -92,7 +92,7 @@ class Game:
             return True
         return False
 
-    def main(self):
+    def start(self):
         # Don't forget to assign player two their piece color!
         self.player_two.color = self.board.WHITE
 

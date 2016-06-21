@@ -48,7 +48,10 @@ class Board:
     def is_out_of_bounds(self, position):
         return position[0] < 0 or position[1] < 0 or position[0] > 7 or position[1] > 7
 
-    def check_legality(self, position, current_player, direction):
+    def check_legality(self, position, current_player, direction, original_position=None):
+        if original_position == None:
+            original_position = position
+
         next_spot = direction(position)
 
         if self.is_out_of_bounds(next_spot):
@@ -61,9 +64,12 @@ class Board:
             and not self.is_out_of_bounds(direction(next_spot))
             and self.is_empty(direction(next_spot))):
             # If next spot is the opposing color and the spot beyond that is empty
-            return legalmove(direction(next_spot), direction, position)
+            if original_position == None:
+                return legalmove(direction(next_spot), direction, position)
+            else:
+                return legalmove(direction(next_spot), direction, original_position)
         elif self.reveal(next_spot) == self.opposing_color(current_player):
-            return self.check_legality(next_spot, current_player, direction)
+            return self.check_legality(next_spot, current_player, direction, original_position)
         else:
             raise Exception('Edge case encountered! Original position was: {} and direction was {}'.format(position, direction.func_name)) 
 
