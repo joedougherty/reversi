@@ -1,4 +1,4 @@
-import socket, threading
+import socket, threading 
 from collections import namedtuple
 from Game import Game
 import sys
@@ -36,6 +36,7 @@ class gameServer(threading.Thread):
 
         # Store a ref to the game the player is engaged in
         self.current_game = None
+        self.current_game_name = None
 
     def run(self):
         self.welcome() # Be polite!
@@ -121,6 +122,7 @@ class gameServer(threading.Thread):
         games[game_name] = game
 
         self.current_game = game
+        self.current_game_name = game_name
 
         self.socket.send("Game '{}' has been created.\n".format(game_name))
         self.socket.send('Wating for a second player to join...\n')
@@ -149,6 +151,9 @@ class gameServer(threading.Thread):
         if self.current_game is not None:
             return True
         return False
+
+    def remove_finished_game(self):
+        del games[self.current_game_name]
 
     def quit(self, *args):
         # TODO
