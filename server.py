@@ -24,10 +24,6 @@ class gameServer(threading.Thread):
                 {'help': 'Create a new game', 'command': self.create_game},
             'join':
                 {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
-            'exit':
-                {'help': 'Hop off the game server.', 'command': self.quit},
-            'quit':
-                {'help': 'Hop off the game server.', 'command': self.quit},
             }
         
         # Flag to maintain whether player is 
@@ -116,8 +112,12 @@ class gameServer(threading.Thread):
             return False
 
         game = Game(player_one=self)
-        # TODO: Ensure users can't add a game that already exists (by name) !!
         game_name = args[0].strip()
+
+        # Ensure users can't add a game that already exists (by name) !!
+        if games.get(game_name):
+            self.socket.send('A game by that name already exists!')
+            return False
 
         games[game_name] = game
 
