@@ -24,6 +24,8 @@ class gameServer(threading.Thread):
                 {'help': 'Create a new game', 'command': self.create_game},
             'join':
                 {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
+            'bail':
+                {'help': "Bail on a created game that no one else has joined.", 'command': self.bail},
             }
         
         # Flag to maintain whether player is 
@@ -111,8 +113,14 @@ class gameServer(threading.Thread):
             self.socket.send("Please provide a name for the game.\n")
             return False
 
-        game = Game(player_one=self)
         game_name = args[0].strip()
+
+        # User can only create one game at a time!
+        if self.current_game: 
+            self.socket.send("You can only create one game at a time!\n")
+            return False
+
+        game = Game(player_one=self)
 
         # Ensure users can't add a game that already exists (by name) !!
         if games.get(game_name):
@@ -125,11 +133,17 @@ class gameServer(threading.Thread):
         self.current_game_name = game_name
 
         self.socket.send("Game '{}' has been created.\n".format(game_name))
-        self.socket.send('Wating for a second player to join...\n')
+        self.socket.send('Waiting for a second player to join...\n')
+        self.socket.send("If you grow impatient waiting, run 'bail'\n")
 
     def join_game(self, args=[]):
         if args == []:
             self.socket.send("Please name a game to join.\n")
+            return False
+
+        # User can only create one game at a time!
+        if self.current_game: 
+            self.socket.send("You need to wait for your first game to start!\n")
             return False
 
         game_name = args[0].strip()
@@ -149,11 +163,19 @@ class gameServer(threading.Thread):
 
     def player_is_in_a_game(self):
         if self.current_game is not None:
-            return True
+            game_is_active = (self.current_game.player_one is not None and self.current_game.player_two is not None)
+            if game_is_active:
+                return True
         return False
 
     def remove_finished_game(self):
         del games[self.current_game_name]
+
+    def bail(self, *args):
+        del games[self.current_game_name]
+        self.current_game = None
+        self.current_game_name = None
+        self.socket.send("You have thusly been set free!\n")
 
     def quit(self, *args):
         # TODO
