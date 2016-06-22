@@ -17,7 +17,7 @@ class gameServer(threading.Thread):
         self.socket = socket
         self.address = address
         self.enable_lock = enable_lock
-        self.COMMANDS = {'list': {'help': 'List open games.', 'command': self.list},
+        self.COMMANDS = {'games': {'help': 'List games. You can join a game where player_two->None', 'command': self.list},
             'help':
                 {'help': 'Prints a help message about available commands (including this one!)', 'command': self.help},
             'create':
@@ -25,7 +25,13 @@ class gameServer(threading.Thread):
             'join':
                 {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
             'bail':
-                {'help': "Bail on a created game that no one else has joined.", 'command': self.bail},
+                {'help': "Bail on a created game that no one else has joined. :(", 'command': self.bail},
+            'name': 
+                {'help': "Set your name! Usage: name <desired name>", 'command': self.set_name},
+            'whoami':
+                {'help': "Learn your current identity!", 'command': self.whoami},
+            'players':
+                {'help': 'List all the current players on the server.', 'command': self.list_players},
             }
         
         # Flag to maintain whether player is 
@@ -35,6 +41,10 @@ class gameServer(threading.Thread):
         # Store a ref to the game the player is engaged in
         self.current_game = None
         self.current_game_name = None
+
+        # Set the player name to this anonymous_# thing until they
+        # select a more appropriate name for themselves
+        self.player_name = 'anonymous_' + str(len(clients) + 1)
 
     def run(self):
         self.welcome() # Be polite!
@@ -102,7 +112,11 @@ class gameServer(threading.Thread):
             self.socket.send('No games exist yet!\n')
         else:
             for game in games.keys():
-                self.socket.send(str(game)+'\n')
+                try:
+                    player_two = games[game].player_two.player_name
+                except:
+                    player_two = None
+                self.socket.send("{} :: player_one->{} | player_two->{}\n".format(game, games[game].player_one.player_name, player_two))
 
     def help(self, *args):
         for key in self.COMMANDS.keys():
@@ -176,6 +190,21 @@ class gameServer(threading.Thread):
         self.current_game = None
         self.current_game_name = None
         self.socket.send("You have thusly been set free!\n")
+
+    def set_name(self, args=[]):
+        if args == []:
+            self.socket.send("Please enter a name!\n")
+            return False
+        else:
+            self.player_name = """ """.join(args)
+            self.socket.send('Henceforth, you shall be known as: {}\n'.format(self.player_name))
+
+    def whoami(self, *args):
+        self.socket.send('Your current name is: {}\n'.format(self.player_name))
+
+    def list_players(self, *args):
+        for c in clients:
+            self.socket.send(c.player_name + '\n')
 
     def quit(self, *args):
         # TODO
