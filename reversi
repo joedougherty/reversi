@@ -9,12 +9,19 @@ def alternate_player(current_player):
     return board.BLACK
 
 def render(board_matrix):
-    hr = '-------------------------'
-    print(hr)
-    for row in board_matrix:
-        row = '|' + '|'.join(row) + '|'
-        print(row)
-        print(hr)
+    board_rep = ''
+    pos_hdr = ' '
+    for pos in range(len(board_matrix)):
+        pos_hdr += '| {}'.format(pos)
+        
+    hr = '--------------------------\n'
+
+    board_rep += pos_hdr + '|\n' + hr
+    for pos, row in enumerate(board_matrix):
+        board_rep += '{}|'.format(pos) + '|'.join(row) + '|\n'
+        board_rep += hr
+
+    print(board_rep)
 
 def validate_proposed_move(proposed_move):
     try:
