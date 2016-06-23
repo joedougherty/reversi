@@ -82,7 +82,11 @@ class gameServer(threading.Thread):
 
     def pretty_send(self, msg, prompt=True):
         """ Add leading and trailing new lines. Fake a command prompt! """
-        formatted_msg = "\n{}\n\n".format(msg)
+        if msg[-1:] == '\n':
+            formatted_msg = "\n{}\n".format(msg)
+        else:
+            formatted_msg = "\n{}\n\n".format(msg)
+
         if prompt:
             formatted_msg += "{}@reversi> ".format(self.player_name)
         self.socket.send(formatted_msg)

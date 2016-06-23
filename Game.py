@@ -10,9 +10,9 @@ class Game:
         # Default player_one to play black pieces, and thus move first
         self.player_one.color = self.board.BLACK
 
-    def broadcast(self, message):
+    def broadcast(self, message, prompt=True):
         for client in (self.player_one, self.player_two):
-            client.pretty_send(message)
+            client.pretty_send(message, prompt=prompt)
 
     def render(self, board_matrix):
         board_rep = ''
@@ -58,7 +58,7 @@ class Game:
 
         # Update board
         self.board.update(proposed_move, self.current_player.color, legal_moves)  
-        self.broadcast(self.render(self.board.matrix))
+        self.broadcast(self.render(self.board.matrix), prompt=False)
 
         # Make sure your opponent still has some possible moves left
         # If so, set the current player to your opponent
@@ -111,7 +111,7 @@ class Game:
 
         self.current_player = self.player_one # Black moves first
 
-        self.broadcast(self.render(self.board.matrix))
+        self.broadcast(self.render(self.board.matrix), prompt=False)
 
         legal_moves = self.board.find_legal_moves(self.current_player.color)
         legal_moves_message = "{}: it's your move.\n".format(self.current_player.color)
