@@ -21,7 +21,7 @@ class gameServer(threading.Thread):
             'help':
                 {'help': 'Prints a help message about available commands (including this one!)', 'command': self.help},
             'create':
-                {'help': 'Create a new game', 'command': self.create_game},
+                {'help': "Create a new game. Usage: 'create <game name>", 'command': self.create_game},
             'join':
                 {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
             'bail':
@@ -78,19 +78,25 @@ class gameServer(threading.Thread):
             lock.release()
 
     def welcome(self):
-        msg = "Wilkommen! Use 'help' to list commands.\n"
-        self.socket.send(msg)
+        self.pretty_send("Wilkommen! Use 'help' to list commands.")
+
+    def pretty_send(self, msg, prompt=True):
+        """ Add leading and trailing new lines. Fake a command prompt! """
+        formatted_msg = "\n{}\n\n".format(msg)
+        if prompt:
+            formatted_msg += "{}@reversi> ".format(self.player_name)
+        self.socket.send(formatted_msg)
 
     def broadcast(self, message):
         for c in clients:
-            c.socket.send(message + '\n')
+            c.pretty_send(message)
 
     def run_command(self, data):
         user_command = data.strip().split(' ')
         if user_command[0] not in self.COMMANDS.keys():
             msg = 'Sorry - I do not know how to {}\n'.format(user_command[0])
             msg += "Use 'help' to list commands.\n"
-            self.socket.send(msg)
+            self.pretty_send(msg)
         else:
             self.COMMANDS.get(user_command[0]).get('command')(user_command[1:])
 
@@ -109,36 +115,40 @@ class gameServer(threading.Thread):
 
     def list(self, *args):
         if games == {}:
-            self.socket.send('No games exist yet!\n')
+            self.pretty_send('No games exist yet!')
         else:
             for game in games.keys():
+                game_list = ''
                 try:
                     player_two = games[game].player_two.player_name
                 except:
                     player_two = None
-                self.socket.send("{} :: player_one->{} | player_two->{}\n".format(game, games[game].player_one.player_name, player_two))
-
+                game_list += "{} :: player_one->{} | player_two->{}\n".format(game, games[game].player_one.player_name, player_two)
+            self.pretty_send(game_list)
+        
     def help(self, *args):
+        all_commands = ''
         for key in self.COMMANDS.keys():
-            self.socket.send('{}: {}'.format(key, self.COMMANDS.get(key).get('help')) + '\n')
+            all_commands += '{}: {}\n'.format(key, self.COMMANDS.get(key).get('help'))
+        self.pretty_send(all_commands)
 
     def create_game(self, args=[]):
         if args == []:
-            self.socket.send("Please provide a name for the game.\n")
+            self.pretty_send("Please provide a name for the game. Usage: create <game name>")
             return False
 
         game_name = args[0].strip()
 
         # User can only create one game at a time!
         if self.current_game: 
-            self.socket.send("You can only create one game at a time!\n")
+            self.pretty_send("You can only create one game at a time!")
             return False
 
         game = Game(player_one=self)
 
         # Ensure users can't add a game that already exists (by name) !!
         if games.get(game_name):
-            self.socket.send('A game by that name already exists!')
+            self.pretty_send('A game by that name already exists!')
             return False
 
         games[game_name] = game
@@ -146,26 +156,27 @@ class gameServer(threading.Thread):
         self.current_game = game
         self.current_game_name = game_name
 
-        self.socket.send("Game '{}' has been created.\n".format(game_name))
-        self.socket.send('Waiting for a second player to join...\n')
-        self.socket.send("If you grow impatient waiting, run 'bail'\n")
+        msg = "Game '{}' has been created.\n".format(game_name)
+        msg += 'Waiting for a second player to join...\n'
+        msg += "If you grow impatient waiting, run 'bail'"
+        self.pretty_send(msg)
 
     def join_game(self, args=[]):
         if args == []:
-            self.socket.send("Please name a game to join.\n")
+            self.pretty_send("Please name a game to join.")
             return False
 
         # User can only create one game at a time!
         if self.current_game: 
-            self.socket.send("You need to wait for your first game to start!\n")
+            self.pretty_send("You need to wait for your first game to start!")
             return False
 
         game_name = args[0].strip()
         if game_name not in games.keys():
-            self.socket.send("Sorry could not find the game '{}'\n".format(game_name))
+            self.pretty_send("Sorry could not find the game '{}'".format(game_name))
         elif games[game_name].player_two != None:
             # Game already has two players!
-            self.socket.send("Sorry! Game already has two players!")
+            self.pretty_send("Sorry! Game already has two players!")
             return False
         else:
             games[game_name].player_two = self # Set player two
@@ -186,25 +197,32 @@ class gameServer(threading.Thread):
         del games[self.current_game_name]
 
     def bail(self, *args):
+        if games.get(self.current_game_name) is None:
+            self.pretty_send("You can't bail! You haven't ever started a game yet!")
+            return False
+
         del games[self.current_game_name]
         self.current_game = None
         self.current_game_name = None
-        self.socket.send("You have thusly been set free!\n")
+        self.pretty_send("You have thusly been set free!")
 
     def set_name(self, args=[]):
         if args == []:
-            self.socket.send("Please enter a name!\n")
+            self.pretty_send("Please enter a name!")
             return False
         else:
             self.player_name = """ """.join(args)
-            self.socket.send('Henceforth, you shall be known as: {}\n'.format(self.player_name))
+            self.pretty_send('Henceforth, you shall be known as: {}'.format(self.player_name))
 
     def whoami(self, *args):
-        self.socket.send('Your current name is: {}\n'.format(self.player_name))
+        self.pretty_send('Your current name is: {}'.format(self.player_name))
 
     def list_players(self, *args):
+        players = ''
         for c in clients:
-            self.socket.send(c.player_name + '\n')
+            players += c.player_name + '\n'
+
+        self.pretty_send(players)
 
     def quit(self, *args):
         # TODO

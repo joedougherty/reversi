@@ -11,8 +11,8 @@ class Game:
         self.player_one.color = self.board.BLACK
 
     def broadcast(self, message):
-        for client in (self.player_one.socket, self.player_two.socket):
-            client.send(message + '\n')
+        for client in (self.player_one, self.player_two):
+            client.pretty_send(message)
 
     def render(self, board_matrix):
         board_rep = ''
@@ -36,27 +36,24 @@ class Game:
         except:
             return False
 
-    def send(self, player, msg):
-        player.socket.send(msg + '\n')
-
     def receive_move(self, data, player_object):
         received_move = data.strip()
 
         # Is it from the correct player?
         if player_object != self.current_player:
-            player_object.socket.send("Hold your horses! It's not your turn yet :)\n")
+            player_object.pretty_send("Hold your horses! It's not your turn yet :)")
             return False
 
         # Is it a valid (syntactically, that is) move?
         proposed_move = self.validate_proposed_move(received_move)
         if not proposed_move:
-            self.current_player.socket.send("Move must be in row,col format. Ex: 5,4\n") 
+            self.current_player.pretty_send("Move must be in row,col format. Ex: 5,4") 
             return False
 
         # Is it legal?
         legal_moves = self.board.find_legal_moves(self.current_player.color)
         if proposed_move not in [x.coordinates for x in legal_moves]:
-            self.current_player.socket.send("Sorry, that's not a legal move.\n")
+            self.current_player.pretty_send("Sorry, that's not a legal move.")
             return False
 
         # Update board
@@ -71,9 +68,10 @@ class Game:
 
         # Was that the final move?
         if self.this_is_the_final_board():
-            self.broadcast("Game over! Here's the score:\n")
-            self.broadcast('Black pieces: {}'.format(self.board.count_pieces(self.board.BLACK)))
-            self.broadcast('White pieces: {}'.format(self.board.count_pieces(self.board.WHITE)))
+            final_score_message = "Game over! Here's the score:\n"
+            final_score_message += 'Black pieces: {}'.format(self.board.count_pieces(self.board.BLACK))
+            final_score_message += 'White pieces: {}'.format(self.board.count_pieces(self.board.WHITE))
+            self.broadcast(final_score_message)
 
             # Remove the game from the global games dict
             self.player_one.remove_finished_game()
@@ -87,10 +85,11 @@ class Game:
 
             return False
         else:
-            self.send(self.current_player, "{}: it's your move.".format(self.current_player.color))
             legal_moves = self.board.find_legal_moves(self.current_player.color)
-            self.send(self.current_player, "Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))
-    
+            legal_moves_message = "{}: it's your move.\n".format(self.current_player.color)
+            legal_moves_message += "Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves])))
+            self.current_player.pretty_send(legal_moves_message)
+
     def this_is_the_final_board(self):
         """ If after you move:
                 * your opponent has no legal moves
@@ -108,12 +107,14 @@ class Game:
         # Don't forget to assign player two their piece color!
         self.player_two.color = self.board.WHITE
 
-        self.broadcast('So it shall begin!\n')
+        self.broadcast('So it shall begin!', prompt=False)
 
         self.current_player = self.player_one # Black moves first
 
         self.broadcast(self.render(self.board.matrix))
-            
-        self.send(self.current_player, "{}: it's your move.".format(self.current_player.color))
+
         legal_moves = self.board.find_legal_moves(self.current_player.color)
-        self.send(self.current_player, "Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))
+        legal_moves_message = "{}: it's your move.\n".format(self.current_player.color)
+        legal_moves_message += "Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves])))
+        self.current_player.pretty_send(legal_moves_message)
+            
