@@ -17,17 +17,17 @@ class gameServer(threading.Thread):
         self.socket = socket
         self.address = address
         self.enable_lock = enable_lock
-        self.COMMANDS = {'games': {'help': 'List games. You can join a game where player_two->None', 'command': self.list},
+        self.COMMANDS = {'games': {'help': 'List games. You can join a game where player_two->None', 'command': self.list_games},
             'help':
                 {'help': 'Prints a help message about available commands (including this one!)', 'command': self.help},
             'create':
-                {'help': "Create a new game. Usage: 'create <game name>", 'command': self.create_game},
+                {'help': "Create a new game. Usage: 'create <game name>'", 'command': self.create_game},
             'join':
                 {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
             'bail':
                 {'help': "Bail on a created game that no one else has joined. :(", 'command': self.bail},
             'name': 
-                {'help': "Set your name! Usage: name <desired name>", 'command': self.set_name},
+                {'help': "Set your name! Usage: 'name <desired name>'", 'command': self.set_name},
             'whoami':
                 {'help': "Learn your current identity!", 'command': self.whoami},
             'players':
@@ -117,12 +117,12 @@ class gameServer(threading.Thread):
         else:
             self.run_command(data)
 
-    def list(self, *args):
+    def list_games(self, *args):
         if games == {}:
             self.pretty_send('No games exist yet!')
         else:
+            game_list = ''
             for game in games.keys():
-                game_list = ''
                 try:
                     player_two = games[game].player_two.player_name
                 except:
