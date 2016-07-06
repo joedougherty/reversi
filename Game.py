@@ -78,7 +78,7 @@ class Game:
             self.broadcast(final_score_message)
 
             # Remove the game from the global games dict
-            self.player_one.remove_finished_game()
+            self.player_one.delete_game()
 
             # Remove players from game
             self.player_one.current_game = None

@@ -5,7 +5,7 @@ import sys
 from datetime import datetime
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('104.131.8.142', 1911))
+s.bind(('', 1911))
 s.listen(4) 
 clients = []
 lock = threading.Lock()
@@ -193,9 +193,6 @@ class gameServer(threading.Thread):
             if game_is_active:
                 return True
         return False
-
-    def remove_finished_game(self):
-        del games[self.current_game_name]
 
     def bail(self, *args):
         if games.get(self.current_game_name) is None:
