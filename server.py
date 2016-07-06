@@ -2,21 +2,21 @@ import socket, threading
 from collections import namedtuple
 from Game import Game
 import sys
+from datetime import datetime
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('', 1911))
-s.listen(4) # 4 What?
-clients = [] #list of clients connected
+s.bind(('104.131.8.142', 1911))
+s.listen(4) 
+clients = []
 lock = threading.Lock()
 
 games = {}
 
 class gameServer(threading.Thread):
-    def __init__(self, (socket,address), enable_lock=True):
+    def __init__(self, (socket,address)):
         threading.Thread.__init__(self)
         self.socket = socket
         self.address = address
-        self.enable_lock = enable_lock
         self.COMMANDS = {'games': {'help': 'List games. You can join a game where player_two->None', 'command': self.list_games},
             'help':
                 {'help': 'Prints a help message about available commands (including this one!)', 'command': self.help},
@@ -49,15 +49,11 @@ class gameServer(threading.Thread):
     def run(self):
         self.welcome() # Be polite!
 
-        if self.enable_lock:
-            lock.acquire()
-        
+        lock.acquire()
         clients.append(self)
-        
-        if self.enable_lock:
-            lock.release()
+        lock.release()
 
-        print '%s:%s connected.' % self.address
+        print("{}:{} connected at {}".format(self.address[0], self.address[1], datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         while True:
             data = self.socket.recv(1024)
 
@@ -67,15 +63,15 @@ class gameServer(threading.Thread):
             self.route_input(data, self)
 
         self.socket.close()
-        print '%s:%s disconnected.' % self.address
-        
-        if self.enable_lock:
-            lock.acquire()
+        print("{}:{} disconnected at {}".format(self.address[0], self.address[1], datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
+        lock.acquire()
+
+        if self.current_game:
+            self.clean_up()
         clients.remove(self)
-
-        if self.enable_lock:
-            lock.release()
+        
+        lock.release()
 
     def welcome(self):
         self.pretty_send("Wilkommen! Use 'help' to list commands.")
@@ -185,6 +181,7 @@ class gameServer(threading.Thread):
         else:
             games[game_name].player_two = self # Set player two
             self.current_game = games[game_name]
+            self.current_game_name = game_name
             self.play_game(games[game_name])
         
     def play_game(self, game):
@@ -205,10 +202,16 @@ class gameServer(threading.Thread):
             self.pretty_send("You can't bail! You haven't ever started a game yet!")
             return False
 
+        self.delete_game()
+        self.set_current_game_to_none()
+        self.pretty_send("You have thusly been set free!")
+
+    def delete_game(self):
         del games[self.current_game_name]
+
+    def set_current_game_to_none(self):
         self.current_game = None
         self.current_game_name = None
-        self.pretty_send("You have thusly been set free!")
 
     def set_name(self, args=[]):
         if args == []:
@@ -222,17 +225,36 @@ class gameServer(threading.Thread):
         self.pretty_send('Your current name is: {}'.format(self.player_name))
 
     def list_players(self, *args):
-        players = ''
-        for c in clients:
-            players += c.player_name + '\n'
+        self.pretty_send('\n'.join([x.player_name for x in clients]))
 
-        self.pretty_send(players)
+    def alert_opponent_game_is_cancelled(self):
+        if self.you_are_player_one() and self.current_game.player_two is not None:
+            self.current_game.player_two.pretty_send("Oh no! You're opponent has disconnected. :(")
 
-    def quit(self, *args):
-        # TODO
-        # * remove current player from any existing games
-        # * maybe there are other things to clean up? (almost certainly)
-        sys.exit(0)
+        if self.you_are_player_two() and self.current_game.player_one is not None:
+            self.current_game.player_one.pretty_send("Oh no! You're opponent has disconnected. :(")
+
+    def clean_up(self, *args):
+        self.alert_opponent_game_is_cancelled()
+
+        game_to_remove = self.current_game
+        current_game_name = self.current_game_name
+
+        for player in (game_to_remove.player_one, game_to_remove.player_two):
+            if player:
+                player.current_game = None
+                player.current_game_name = None
+
+        game_to_remove.player_one = None
+        game_to_remove.player_two = None
+
+        del games[current_game_name]
+
+    def you_are_player_one(self):
+        return self.current_game and self.current_game.player_one == self
+
+    def you_are_player_two(self):
+        return self.current_game and self.current_game.player_two == self
 
 while True: # wait for socket to connect
-    gameServer(s.accept(), enable_lock=True).start()
+    gameServer(s.accept()).start()
