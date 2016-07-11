@@ -73,7 +73,7 @@ class Game:
         # Was that the final move?
         if self.this_is_the_final_board():
             final_score_message = "Game over! Here's the score:\n"
-            final_score_message += 'Black pieces: {}'.format(self.board.count_pieces(self.board.BLACK))
+            final_score_message += 'Black pieces: {}\n'.format(self.board.count_pieces(self.board.BLACK))
             final_score_message += 'White pieces: {}'.format(self.board.count_pieces(self.board.WHITE))
             self.broadcast(final_score_message)
 
