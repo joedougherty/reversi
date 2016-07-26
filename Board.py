@@ -4,6 +4,8 @@ from collections import namedtuple
 from directions import north, east, south, west, \
                     northeast, northwest, southeast, southwest
 
+from copy import deepcopy
+
 legalmove = namedtuple('legalmove', ['coordinates', 'direction', 'origin'])
 
 class Board:
@@ -89,12 +91,16 @@ class Board:
         self.matrix[position[0]][position[1]] = color_to_set
 
     def update(self, spot_to_claim, color_to_set, legal_moves):
-        self.set_spot(spot_to_claim, color_to_set) 
+        board_copy = deepcopy(self)
+
+        board_copy.set_spot(spot_to_claim, color_to_set) 
         for move in [x for x in legal_moves if x.coordinates == spot_to_claim]:
             spot = move.origin
             while spot != spot_to_claim:
-                self.set_spot(spot, color_to_set)
+                board_copy.set_spot(spot, color_to_set)
                 spot = move.direction(spot)
+
+        return board_copy
 
     def count_pieces(self, color):
         count = 0
