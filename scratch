@@ -19,3 +19,17 @@ def create_tree(board, current_player, depth=3):
     for b in game_tree:
         opponent = alternate_player(current_player)
         create_tree(b, opponent, depth=depth-1)
+
+def add_turns(root_node, current_player, num_of_turns=3, persistent_parent_node=None):
+    if persistent_parent_node is None:
+        persistent_parent_node = root_node
+
+    print('Current level: {}'.format(num_of_turns))
+
+    if num_of_turns == 0:
+        return persistent_parent_node
+
+    game_tree = add_children(root_node, current_player)
+    for node in find_max_nodes(game_tree):
+        opponent = alternate_player(current_player)
+        return add_turns(node, opponent, num_of_turns=num_of_turns-1, persistent_parent_node=persistent_parent_node)

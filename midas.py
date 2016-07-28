@@ -8,37 +8,43 @@ class Node():
     def add_child(self, obj):
         self.children.append(obj)
 
-def add_children(root_node, current_player):
-    legal_moves = root_node.board.find_legal_moves(current_player)
+    def is_a_leaf(self):
+        return self.children == []
+
+    def is_the_root_node(self):
+        return self.parent is None
+
+def add_children(game_state, current_player):
+    legal_moves = game_state.board.find_legal_moves(current_player)
     for proposed_move in legal_moves:
-        # TODO   
-        # Check to make sure new_board isn't in a final state
-        new_board = board.update(proposed_move.coordinates, current_player, legal_moves)
-        root_node.add_child(Node(new_board, parent=root_node, level=root_node.level + 1))
+        # TODO Check to make sure new_board isn't in a final state
+        new_board = game_state.board.update(proposed_move.coordinates, current_player, legal_moves)
+        game_state.add_child(Node(new_board, parent=game_state, level=game_state.level + 1))
 
-    return root_node
-
-def find_max_nodes(root_node, max_nodes=[], debug=False):
+def find_max_nodes(root_node, max_nodes=[]):
     try:
         if root_node.children == []:
-            if debug:
-                print(root_node, root_node.level)
-            max_nodes.append((root_node, root_node.level))
+            max_nodes.append(root_node)
         else:
             for child in root_node.children:
                 find_max_nodes(child, max_nodes)
-
     except Exception as e:
         raise
-
     finally:
         return max_nodes
 
-#def expand_full_level(root_node, current_player):
-def expand_full_level(root_node, level_to_expand, current_player):
-    for child_node in root_node.children:
-        add_children(child_node, current_player)
+def add_level_to_game_tree(game_tree, current_player):
+    for terminal_node in find_max_nodes(game_tree, max_nodes=[]):
+        add_children(terminal_node, current_player)
 
+    return game_tree
+
+def add_turns(root_node, current_player, num_of_turns=1):
+    while num_of_turns > 0:
+        add_level_to_game_tree(root_node, current_player)
+        opponent = alternate_player(current_player)
+        add_level_to_game_tree(root_node, opponent)
+        num_of_turns = num_of_turns - 1
     return root_node
 
 def alternate_player(current_player):
@@ -62,12 +68,4 @@ def render(board_matrix):
     print(board_rep)
 
 from Board import Board
-
 board = Board()
-
-root_node = Node(board, parent=None)
-
-tree = add_children(root_node, board.BLACK)
-
-tree.children[0].add_child(Node(board, parent=tree, level=2))
-
