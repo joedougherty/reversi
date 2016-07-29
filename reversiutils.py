@@ -1,4 +1,7 @@
+from Board import Board
+
 def alternate_player(current_player):
+    board = Board()
     if current_player == board.BLACK:
         return board.WHITE
     return board.BLACK
