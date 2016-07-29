@@ -9,10 +9,10 @@ class Node():
         self.children.append(obj)
 
 def find_max_nodes(root_node, max_nodes=None):
-    try:
-        if max_nodes is None:
-            max_nodes = []
+    if max_nodes is None:
+        max_nodes = []
 
+    try:
         if root_node.children == []:
             max_nodes.append(root_node)
         else:
