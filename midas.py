@@ -1,3 +1,5 @@
+from reversiutils import alternate_player, render, validate_proposed_move
+
 class Node():
     def __init__(self, board, parent=None, level=0):
         self.board = board
@@ -8,7 +10,19 @@ class Node():
     def add_child(self, obj):
         self.children.append(obj)
 
+    def is_a_leaf_node(self):
+        return self.children == []
+
+    def is_the_root_node(self):
+        return self.parent is None
+
 def find_max_nodes(root_node, max_nodes=None):
+    """
+    Recursively traverse the game tree (starting from root_node)
+    and collect references to all terminal nodes.
+
+    Return a list of references to all terminal nodes.
+    """
     if max_nodes is None:
         max_nodes = []
 
@@ -24,6 +38,11 @@ def find_max_nodes(root_node, max_nodes=None):
         return max_nodes
 
 def add_children(game_state, current_player):
+    """ 
+    Given a game state (in the form of a Node object):
+        * calculate all possible opponent responses 
+        * attach them as children to the provided game state.
+    """
     legal_moves = game_state.board.find_legal_moves(current_player)
     for proposed_move in legal_moves:
         # TODO Check to make sure new_board isn't in a final state
@@ -31,36 +50,23 @@ def add_children(game_state, current_player):
         game_state.add_child(Node(new_board, parent=game_state, level=game_state.level + 1))
 
 def add_level_to_game_tree(game_tree, current_player):
+    """ 
+    For all terminal nodes in the game tree:
+        * run `add_children` on each. 
+    """
     for terminal_node in find_max_nodes(game_tree):
         add_children(terminal_node, current_player)
     return game_tree
 
-def add_turns(root_node, current_player, num_of_turns=1):
+def simulate_turns(root_node, current_player, num_of_turns=1):
+    """ 
+    For each turn as given by num_of_turns:
+        * Add all possible responses to terminal nodes for current player
+        * Add all possible responses to terminal nodes for opponent
+    """
     while num_of_turns > 0:
         add_level_to_game_tree(root_node, current_player)
         add_level_to_game_tree(root_node, alternate_player(current_player))
         num_of_turns = num_of_turns - 1
     return root_node
 
-def alternate_player(current_player):
-    if current_player == board.BLACK:
-        return board.WHITE
-    return board.BLACK
-
-def render(board_matrix):
-    board_rep = ''
-    pos_hdr = ' '
-    for pos in range(len(board_matrix)):
-        pos_hdr += '| {}'.format(pos)
-        
-    hr = '--------------------------\n'
-
-    board_rep += pos_hdr + '|\n' + hr
-    for pos, row in enumerate(board_matrix):
-        board_rep += '{}|'.format(pos) + '|'.join(row) + '|\n'
-        board_rep += hr
-
-    print(board_rep)
-
-from Board import Board
-board = Board()
