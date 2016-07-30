@@ -6,7 +6,7 @@ So you'd like to play around a bit with generating game trees? Very good!
 
 `midas.py` contains game tree creation/manipulation functions. Feel free to start at the bottom by reading `simulate_turns`: this ought to show how a game tree is generated.
 
-## Notes ## 
+## Notes  
 
 **Create a new game tree for each experminent**:
 
