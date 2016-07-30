@@ -19,7 +19,7 @@ while legal_moves != []:
     while proposed_move not in [x.coordinates for x in legal_moves]:
         proposed_move = validate_proposed_move(input('Propose a move:'))
 
-    board.matrix = board.update(proposed_move, current_player, legal_moves)  
+    board = board.update(proposed_move, current_player, legal_moves)  
     current_player = alternate_player(current_player)
     legal_moves = board.find_legal_moves(current_player)
 
