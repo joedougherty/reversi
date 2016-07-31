@@ -103,7 +103,7 @@ def find_max_nodes(root_node, max_nodes=None):
     finally:
         return max_nodes
 
-def trace_lineage(node, root_first=True):
+def trace_lineage(node, root_first_order=True):
     """ 
     Traces a node back to the opening board.
 
@@ -126,7 +126,7 @@ def trace_lineage(node, root_first=True):
     # Add the opening board to lineage
     lineage.append(Node(Board()))
 
-    if root_first:
+    if root_first_order:
         lineage.reverse()
     
     return lineage
