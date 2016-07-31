@@ -1,5 +1,20 @@
 from reversiutils import alternate_player
 
+"""
+This first section includes the basic Node class
+and functions related to generating game trees.
+
+These functions move from specific to general.
+
+    add_children: a function that finds response boards, is the most specific.
+
+    add_level_to_game_tree: runs `add_children` on all leaf nodes (as found by
+    `find_max_nodes`)
+
+    simulate_turns: calls `add_level_to_game_tree` for the current player, 
+    then the opponent, as many as times as indicated by the num_of_turns argument.
+"""
+
 class Node():
     def __init__(self, board, parent=None, level=0):
         self.board = board
@@ -15,27 +30,6 @@ class Node():
 
     def is_the_root_node(self):
         return self.parent is None
-
-def find_max_nodes(root_node, max_nodes=None):
-    """
-    Recursively traverse the game tree (starting from root_node)
-    and collect references to all terminal nodes.
-
-    Return a list of references to all terminal nodes.
-    """
-    if max_nodes is None:
-        max_nodes = []
-
-    try:
-        if root_node.children == []:
-            max_nodes.append(root_node)
-        else:
-            for child in root_node.children:
-                find_max_nodes(child, max_nodes)
-    except Exception as e:
-        raise e
-    finally:
-        return max_nodes
 
 def add_children(game_state, current_player):
     """ 
@@ -78,4 +72,33 @@ def simulate_turns(root_node, current_player, num_of_turns=1):
         add_level_to_game_tree(root_node, alternate_player(current_player))
         num_of_turns = num_of_turns - 1
     return root_node
+
+"""
+This section includes functions that facilitate game tree analysis.
+"""
+
+def find_max_depth(root_node):
+    leaf_nodes = find_max_nodes(root_node)
+    return max([node.level for node in leaf_nodes])
+
+def find_max_nodes(root_node, max_nodes=None):
+    """
+    Recursively traverse the game tree (starting from root_node)
+    and collect references to all terminal nodes.
+
+    Return a list of references to all terminal nodes.
+    """
+    if max_nodes is None:
+        max_nodes = []
+
+    try:
+        if root_node.is_a_leaf_node():
+            max_nodes.append(root_node)
+        else:
+            for child in root_node.children:
+                find_max_nodes(child, max_nodes)
+    except Exception as e:
+        raise e
+    finally:
+        return max_nodes
 
