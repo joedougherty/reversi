@@ -21,4 +21,4 @@ I've only been able to successfully simulate 4 turns (from the opening board). O
 
 __Footnotes__:
 
-[1] Technically, some of the `return` statements are not required (ex: `add_level_to_game_tree`), though I've included them regardless. 
+[1] Technically, some of the `return` statements are not required (ex: `add_level_to_game_tree`). I've included them as a convenience should you want a reference back to the Node you provided as an argument.  
