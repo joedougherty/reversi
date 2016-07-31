@@ -110,7 +110,7 @@ def trace_lineage(node, root_first_order=True):
     Returns a list of previous board states, including
     the opening board.
 
-    If root_first == True:
+    If root_first_order == True:
         The returned list will start with the opening board
         and move toward `node`
     Otherwise:
