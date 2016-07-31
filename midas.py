@@ -1,4 +1,4 @@
-from reversiutils import alternate_player, render, validate_proposed_move
+from reversiutils import alternate_player
 
 class Node():
     def __init__(self, board, parent=None, level=0):
@@ -40,8 +40,8 @@ def find_max_nodes(root_node, max_nodes=None):
 def add_children(game_state, current_player):
     """ 
     Given a game state (in the form of a Node object):
-        * calculate all possible opponent responses 
-        * attach them as children to the provided game state.
+        * calculate all possible responses as given by `current_player`
+        * attach them as children to the provided game state
     """
     seen_moves = []
 
@@ -55,14 +55,13 @@ def add_children(game_state, current_player):
         if proposed_move.coordinates not in seen_moves:
             seen_moves.append(proposed_move.coordinates) # keeps track of proposed_move.coordindates
 
-            # TODO Check to make sure new_board isn't in a final state
             new_board = game_state.board.update(proposed_move.coordinates, current_player, legal_moves)
             game_state.add_child(Node(new_board, parent=game_state, level=game_state.level + 1))
 
 def add_level_to_game_tree(game_tree, current_player):
     """ 
     For all terminal nodes in the game tree:
-        * run `add_children` on each. 
+        * run `add_children` on each
     """
     for terminal_node in find_max_nodes(game_tree):
         add_children(terminal_node, current_player)
