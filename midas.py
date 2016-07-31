@@ -1,4 +1,5 @@
 from reversiutils import alternate_player
+from Board import Board
 
 """
 This first section includes the basic Node class
@@ -101,4 +102,33 @@ def find_max_nodes(root_node, max_nodes=None):
         raise e
     finally:
         return max_nodes
+
+def trace_lineage(node, root_first=True):
+    """ 
+    Traces a node back to the opening board.
+
+    Returns a list of previous board states, including
+    the opening board.
+
+    If root_first == True:
+        The returned list will start with the opening board
+        and move toward `node`
+    Otherwise:
+        The returned list will start with `node` and move
+        toward the opening board
+    """
+
+    lineage = []
+    while not node.is_the_root_node():
+        lineage.append(node)
+        node = node.parent
+
+    # Add the opening board to lineage
+    lineage.append(Node(Board()))
+
+    if parent_first:
+        lineage.reverse()
+    
+    return lineage
+        
 
