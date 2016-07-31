@@ -126,7 +126,7 @@ def trace_lineage(node, root_first=True):
     # Add the opening board to lineage
     lineage.append(Node(Board()))
 
-    if parent_first:
+    if root_first:
         lineage.reverse()
     
     return lineage
