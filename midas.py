@@ -1,5 +1,6 @@
-from reversiutils import alternate_player
+from reversiutils import alternate_player, render
 from Board import Board
+from copy import deepcopy
 
 """
 This first section includes the basic Node class
@@ -17,11 +18,12 @@ These functions move from specific to general.
 """
 
 class Node():
-    def __init__(self, board, parent=None, level=0):
+    def __init__(self, board, parent=None, level=0, player=None):
         self.board = board
         self.children = []
         self.parent = parent
         self.level = level
+        self.player = player
 
     def add_child(self, obj):
         self.children.append(obj)
@@ -51,7 +53,7 @@ def add_children(game_state, current_player):
             seen_moves.append(proposed_move.coordinates) # keeps track of proposed_move.coordindates
 
             new_board = game_state.board.update(proposed_move.coordinates, current_player, legal_moves)
-            game_state.add_child(Node(new_board, parent=game_state, level=game_state.level + 1))
+            game_state.add_child(Node(new_board, parent=game_state, level=game_state.level + 1, player=current_player))
 
 def add_level_to_game_tree(game_tree, current_player):
     """ 
@@ -81,6 +83,10 @@ This section includes functions that facilitate game tree analysis.
 def find_max_depth(root_node):
     leaf_nodes = find_max_nodes(root_node)
     return max([node.level for node in leaf_nodes])
+
+def find_min_depth(root_node):
+    leaf_nodes = find_max_nodes(root_node)
+    return min([node.level for node in leaf_nodes])
 
 def find_max_nodes(root_node, max_nodes=None):
     """
@@ -131,4 +137,17 @@ def trace_lineage(node, root_first_order=True):
     
     return lineage
         
+def show_lineage(lineage):
+    for node in lineage:
+        render(node.board.matrix)
+
+def this_is_a_final_state(node):
+    opponent = alternate_player(node.player) 
+    
+    opponent_has_legal_moves = node.board.find_legal_moves(opponent) != []
+    current_player_has_legal_moves = node.board.find_legal_moves(node.player) != []
+    
+    if opponent_has_legal_moves or current_player_has_legal_moves:
+        return False
+    return True
 
