@@ -151,3 +151,16 @@ def this_is_a_final_state(node):
         return False
     return True
 
+""" AI """
+
+def decide(current_game_state, current_player, num_of_turns_to_lookahead=2):
+    # Generate game tree (of depth given by num_of_turns_to_lookahead)
+    root_node = copy(current_game_state)
+    game_tree = simulate_turns(root_node, current_player, num_of_turns=num_of_turns_to_lookahead)
+    pass
+
+def score_board(game_state, player):
+    pass
+
+def minmax(game_tree, current_player):
+    pass

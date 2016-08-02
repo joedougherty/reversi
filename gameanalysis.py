@@ -35,7 +35,7 @@ def timetrial(num_of_turns):
 
 	end = timer()
 
-	print("Simulating {} turns took {}".format(num_of_turns, (end-start)))
+	print("Simulating {} turns took {} seconds".format(num_of_turns, (end-start)))
 	print("Number of terminal nodes: {}\n".format(len(find_max_nodes(game_tree))))
 
 for i in range(1,5):
