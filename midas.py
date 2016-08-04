@@ -163,14 +163,66 @@ def this_is_a_final_state(node):
 
 """ AI """
 
-def decide(current_game_state, current_player, num_of_turns_to_lookahead=2):
-    # Generate game tree (of depth given by num_of_turns_to_lookahead)
+def decide_move(current_game_state, current_player, num_of_turns_to_lookahead=2, debug=False):
+    # Generate temporary game tree (of depth given by num_of_turns_to_lookahead)
     root_node = copy(current_game_state)
     game_tree = simulate_turns(root_node, current_player, num_of_turns=num_of_turns_to_lookahead)
-    pass
 
-def score_board(game_state, player):
-    pass
+    # Apply minimax to game tree
+    v = minimax(game_tree, max_player=current_player, min_player=alternate_player(current_player))
 
-def minmax(game_tree, current_player):
-    pass
+    # Clean up the temporary game tree
+    del root_node, game_tree
+
+    if debug:
+        print(v)
+
+    # Return the spot to move that's associated
+    # with the best score according to minimax
+    return v.placed_piece
+
+def evaluate(node):
+    raise NotImplementedError()
+
+terminal_node = namedtuple('terminal_node', ['placed_piece', 'val'])
+
+def minimax(node, max_player=None, min_player=None):
+    """
+    Implementation translated from pseudocode found on
+    https://www.cs.cornell.edu/courses/cs312/2002sp/lectures/rec21.htm 
+
+    fun minimax(n: node): int =
+    if leaf(n) then return evaluate(n)
+    if n is a max node
+      v := L
+      for each child of n
+         v' := minimax (child)
+         if v' > v, v:= v'
+      return v
+    if n is a min node
+      for each child of n
+         v' := minimax (child)
+         if v' < v, v:= v'
+      return v
+
+    """
+
+    if node.is_a_leaf_node():
+        return terminal_node(node.placed_piece, evaluate(node))
+
+    if node.next_player == max_player:
+        best_case = terminal_node(None, -1000000)
+        for child in node.children:
+            v = minimax(child, max_player=max_player, min_player=min_player)
+            if v.val > best_case.val:
+                best_case = v
+        return best_case
+
+    if node.next_player == min_player:
+        worst_case = terminal_node(None, 1000000)
+        for child in node.children:
+            v = minimax(child, max_player=max_player, min_player=min_player)
+            if v.val < worst_case.val:
+                worst_case = v
+        return worst_case
+
