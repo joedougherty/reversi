@@ -18,12 +18,14 @@ These functions move from specific to general.
 """
 
 class Node():
-    def __init__(self, board, parent=None, level=0, player=None):
+    def __init__(self, val, parent=None, level=0, placed_piece=None, player=None, next_player=None):
         self.board = board
         self.children = []
         self.parent = parent
         self.level = level
+        self.placed_piece = placed_piece
         self.player = player
+        self.next_player = next_player
 
     def add_child(self, obj):
         self.children.append(obj)
@@ -53,7 +55,15 @@ def add_children(game_state, current_player):
             seen_moves.append(proposed_move.coordinates) # keeps track of proposed_move.coordindates
 
             new_board = game_state.board.update(proposed_move.coordinates, current_player, legal_moves)
-            game_state.add_child(Node(new_board, parent=game_state, level=game_state.level + 1, player=current_player))
+            node = Node(
+                new_board, 
+                parent=game_state, 
+                level=game_state.level+1, 
+                placed_piece = proposed_move.coordinates,
+                player=current_player, 
+                next_player=alternate_player(current_player)
+            )
+            game_state.add_child(node)
 
 def add_level_to_game_tree(game_tree, current_player):
     """ 

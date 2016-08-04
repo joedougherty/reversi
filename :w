@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+from six.moves import input
+from Board import Board
+from reversiutils import alternate_player, render, validate_proposed_move
+import argparse
+
+def main(ai_opponent=False):
+    
+    if ai_opponent:
+        print('lksdlkjsdf')
+        raise SystemExit()
+
+    board = Board()
+
+    current_player = board.BLACK # Black moves first
+    legal_moves = board.find_legal_moves(current_player)
+
+    proposed_move = False
+
+    while legal_moves != []:
+        render(board.matrix)
+        print("{}: it's your move.".format(current_player))
+        print("Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))
+        
+        while proposed_move not in [x.coordinates for x in legal_moves]:
+            proposed_move = validate_proposed_move(input('Propose a move:'))
+
+        board = board.update(proposed_move, current_player, legal_moves)  
+        current_player = alternate_player(current_player)
+        legal_moves = board.find_legal_moves(current_player)
+
+    render(board.matrix)
+    print('Black pieces: {}'.format(board.count_pieces(board.BLACK)))
+    print('White pieces: {}'.format(board.count_pieces(board.WHITE)))
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()  
+    parser.add_argument('--ai', required=False, type=str)
+    args = parser.parse_args()
+
+    main(args['--ai'])

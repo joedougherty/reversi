@@ -1,15 +1,16 @@
 from reversiutils import alternate_player
 from midas import find_max_nodes
 from Board import Board
-import sys
+from collections import namedtuple
 
 class Node():
-    def __init__(self, val, parent=None, level=0, player=None, next_player=None):
+    def __init__(self, val, parent=None, level=0, placed_piece=None, player=None, next_player=None):
         self.val = val
         self.children = []
         self.parent = parent
         self.player = player
         self.next_player = next_player
+        self.placed_piece = placed_piece
     
     def add_child(self, obj):
         self.children.append(obj)
@@ -28,7 +29,7 @@ def create_tree():
     b = Board()
 
     # Root node
-    tree = Node(None, parent=None, next_player=b.BLACK)
+    tree = Node(None, parent=None, next_player=b.BLACK, placed_piece=None)
 
     # next_player = b.WHITE 
     a1 = Node(9, parent=tree, next_player=b.WHITE)
@@ -51,24 +52,19 @@ def create_tree():
 
     d1 = Node(14, parent=a3, next_player=b.BLACK)
     d2 = Node(5, parent=a3, next_player=b.BLACK)
-    d3 = Node(2, parent=a3, next_player=b.BLACK)
+    d3 = Node(1, parent=a3, next_player=b.BLACK)
 
     add_children_to_parent((d1, d2, d3), a3)
 
-    """
-          NONE (root)       (self.next_player == b.BLACK)
-        /      |      \
-       B       C       D    (White moves next; self.next_player == b.WHITE)
-       |       |       |
-     / | \   / | \   / | \  (Black moves next; self.next_player == b.BLACK)
-    3  12 8 2  4  6 14 5  2
-
-    """
+    extra = Node(3, parent=b1, next_player=b.WHITE, placed_piece=(6,6))
+    extra.parent.add_child(extra)
 
     return tree
 
 def evaluate(node):
     return node.val
+
+terminal_node = namedtuple('terminal_node', ['placed_piece', 'val'])
 
 def minimax(node, max_player=None, min_player=None):
     """
@@ -91,22 +87,23 @@ def minimax(node, max_player=None, min_player=None):
       return v
 
     """
+
     if node.is_a_leaf_node():
-        return evaluate(node)
+        return terminal_node(node.placed_piece, evaluate(node))
 
     if node.next_player == max_player:
-        best_case = -1000000
+        best_case = terminal_node(None, -1000000)
         for child in node.children:
             v = minimax(child, max_player=max_player, min_player=min_player)
-            if v > best_case:
+            if v.val > best_case.val:
                 best_case = v
         return best_case
 
     if node.next_player == min_player:
-        worst_case = 1000000
+        worst_case = terminal_node(None, 1000000)
         for child in node.children:
             v = minimax(child, max_player=max_player, min_player=min_player)
-            if v < worst_case:
+            if v.val < worst_case.val:
                 worst_case = v
         return worst_case
 
