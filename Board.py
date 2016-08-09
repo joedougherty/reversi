@@ -113,3 +113,15 @@ class Board:
 
     def dump_machine_representation(self):
         print(self.matrix)
+
+    def game_is_over(self, current_player):
+        from reversiutils import alternate_player
+        opponent = alternate_player(current_player)
+
+        opponent_has_no_moves = self.find_legal_moves(opponent) == []
+        current_player_has_no_moves = self.find_legal_moves(current_player) == []
+
+        if opponent_has_no_moves and current_player_has_no_moves:
+            return True
+        return False
+

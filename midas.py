@@ -1,6 +1,7 @@
 from reversiutils import alternate_player, render
 from Board import Board
 from copy import deepcopy
+from collections import namedtuple
 
 """
 This first section includes the basic Node class
@@ -18,7 +19,7 @@ These functions move from specific to general.
 """
 
 class Node():
-    def __init__(self, val, parent=None, level=0, placed_piece=None, player=None, next_player=None):
+    def __init__(self, board, parent=None, level=0, placed_piece=None, player=None, next_player=None):
         self.board = board
         self.children = []
         self.parent = parent
@@ -165,7 +166,7 @@ def this_is_a_final_state(node):
 
 def decide_move(current_game_state, current_player, num_of_turns_to_lookahead=2, debug=False):
     # Generate temporary game tree (of depth given by num_of_turns_to_lookahead)
-    root_node = copy(current_game_state)
+    root_node = deepcopy(current_game_state)
     game_tree = simulate_turns(root_node, current_player, num_of_turns=num_of_turns_to_lookahead)
 
     # Apply minimax to game tree
@@ -181,8 +182,21 @@ def decide_move(current_game_state, current_player, num_of_turns_to_lookahead=2,
     # with the best score according to minimax
     return v.placed_piece
 
-def evaluate(node):
-    raise NotImplementedError()
+def evaluate(node, player):
+    opponent = alternate_player(player)
+
+    current_player_has_most_pieces = node.board.count_pieces(player) > node.board.count_pieces(opponent)
+    opponent_has_most_pieces = node.board.count_pieces(player) < node.board.count_pieces(opponent)
+
+    if node.board.game_is_over(player):
+        if current_player_has_most_pieces:
+            return 10000000
+        elif opponent_has_most_pieces:
+            return -10000000
+        else: # game is a draw
+            return 0
+    else:
+        return node.board.count_pieces(player) 
 
 terminal_node = namedtuple('terminal_node', ['placed_piece', 'val'])
 
@@ -208,7 +222,8 @@ def minimax(node, max_player=None, min_player=None):
     """
 
     if node.is_a_leaf_node():
-        return terminal_node(node.placed_piece, evaluate(node))
+        print('found a leaf!')
+        return terminal_node(node.placed_piece, evaluate(node, player=max_player))
 
     if node.next_player == max_player:
         best_case = terminal_node(None, -1000000)
@@ -225,4 +240,6 @@ def minimax(node, max_player=None, min_player=None):
             if v.val < worst_case.val:
                 worst_case = v
         return worst_case
+
+    raise SystemExit('you should not be here')
 
