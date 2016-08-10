@@ -232,14 +232,13 @@ def minimax(node, max_player=None, min_player=None):
             if v.val > best_case.val:
                 best_case = v
         return best_case
-
-    if node.next_player == min_player:
+    elif node.next_player == min_player:
         worst_case = terminal_node(None, 1000000)
         for child in node.children:
             v = minimax(child, max_player=max_player, min_player=min_player)
             if v.val < worst_case.val:
                 worst_case = v
         return worst_case
-
-    raise SystemExit('you should not be here')
+    else:
+        raise ValueError('node.next_player was set to neither max_player nor min_player.')
 
