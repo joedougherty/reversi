@@ -16,9 +16,10 @@ proposed_move = False
 while legal_moves != []:
     render(board.matrix)
 
-    if current_player == board.WHITE: ### SKYNET ###
+    if current_player == board.WHITE: 
+        ### SKYNET ###
         node = Node(board, parent=None, level=0, placed_piece=None, next_player=alternate_player(current_player))
-        proposed_move = decide_move(node, current_player, num_of_turns_to_lookahead=2, debug=True)
+        proposed_move = decide_move(node, current_player, num_of_turns_to_lookahead=2, debug=False)
     else:
         print("{}: it's your move.".format(current_player))
         print("Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))

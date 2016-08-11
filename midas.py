@@ -2,6 +2,7 @@ from reversiutils import alternate_player, render
 from Board import Board
 from copy import deepcopy
 from collections import namedtuple
+from timeit import default_timer as timer
 
 """
 This first section includes the basic Node class
@@ -165,12 +166,19 @@ def this_is_a_final_state(node):
 """ AI """
 
 def decide_move(current_game_state, current_player, num_of_turns_to_lookahead=2, debug=False):
+    start = timer()
+
     # Generate temporary game tree (of depth given by num_of_turns_to_lookahead)
     root_node = deepcopy(current_game_state)
     game_tree = simulate_turns(root_node, current_player, num_of_turns=num_of_turns_to_lookahead)
 
     # Apply minimax to game tree
     v = minimax(game_tree, max_player=current_player, min_player=alternate_player(current_player))
+
+    # Once the optimal board is found,
+    # trace it back to the move immediately
+    # following the root node
+    node_containing_next_move = trace_lineage(v.node)[1]
 
     # Clean up the temporary game tree
     del root_node, game_tree
@@ -180,7 +188,11 @@ def decide_move(current_game_state, current_player, num_of_turns_to_lookahead=2,
 
     # Return the spot to move that's associated
     # with the best score according to minimax
-    return v.placed_piece
+
+    end = timer()
+    print('Opponent took {} seconds to respond.'.format((end-start)))
+
+    return node_containing_next_move.placed_piece
 
 def evaluate(node, player):
     opponent = alternate_player(player)
@@ -198,7 +210,7 @@ def evaluate(node, player):
     else:
         return node.board.count_pieces(player) 
 
-terminal_node = namedtuple('terminal_node', ['placed_piece', 'val'])
+terminal_node = namedtuple('terminal_node', ['node', 'val'])
 
 def minimax(node, max_player=None, min_player=None):
     """
@@ -222,8 +234,7 @@ def minimax(node, max_player=None, min_player=None):
     """
 
     if node.is_a_leaf_node():
-        print('found a leaf!')
-        return terminal_node(node.placed_piece, evaluate(node, player=max_player))
+        return terminal_node(node, evaluate(node, player=max_player))
 
     if node.next_player == max_player:
         best_case = terminal_node(None, -1000000)
