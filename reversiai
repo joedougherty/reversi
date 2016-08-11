@@ -3,7 +3,6 @@
 from six.moves import input
 from Board import Board
 from reversiutils import alternate_player, render, validate_proposed_move
-
 from midas import Node, decide_move
 
 board = Board()
