@@ -191,6 +191,7 @@ def decide_move(current_game_state, current_player, num_of_turns_to_lookahead=2,
 
     end = timer()
     print('Opponent took {} seconds to respond.'.format((end-start)))
+    print('Opponent moved to location {}.\n'.format(node_containing_next_move.placed_piece))
 
     return node_containing_next_move.placed_piece
 
