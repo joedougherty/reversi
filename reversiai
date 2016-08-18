@@ -4,6 +4,7 @@ from six.moves import input
 from Board import Board
 from reversiutils import alternate_player, render, validate_proposed_move
 from midas import Node, decide_move
+from logger import create_logger
 
 board = Board()
 
@@ -12,13 +13,24 @@ legal_moves = board.find_legal_moves(current_player)
 
 proposed_move = False
 
-while legal_moves != []:
+LOGGING = False
+
+if LOGGING:
+    log = create_logger()
+
+while not board.game_is_over(current_player):
     render(board.matrix)
 
     if current_player == board.WHITE: 
         ### SKYNET ###
         node = Node(board, parent=None, level=0, placed_piece=None, next_player=alternate_player(current_player))
         proposed_move = decide_move(node, current_player, num_of_turns_to_lookahead=2, debug=False)
+
+        if LOGGING:
+            log.debug('W {}'.format(proposed_move))
+            for m in legal_moves:
+                log.debug(m)
+
     else:
         print("{}: it's your move.".format(current_player))
         print("Your possible moves: {}".format(list(set([x.coordinates for x in legal_moves]))))
@@ -26,8 +38,18 @@ while legal_moves != []:
         while proposed_move not in [x.coordinates for x in legal_moves]:
             proposed_move = validate_proposed_move(input('Propose a move:'))
 
+        if LOGGING:
+            log.debug('B {}'.format(proposed_move))
+            for m in legal_moves:
+                log.debug(m)
+
     board = board.update(proposed_move, current_player, legal_moves)  
-    current_player = alternate_player(current_player)
+
+    if board.find_legal_moves(alternate_player(current_player)) != []:
+        # If opponent has legal moves, alternate players
+        # Otherwise, current_player gets to contine playing 
+        current_player = alternate_player(current_player)
+
     legal_moves = board.find_legal_moves(current_player)
 
 render(board.matrix)

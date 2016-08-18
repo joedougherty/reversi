@@ -195,23 +195,36 @@ def decide_move(current_game_state, current_player, num_of_turns_to_lookahead=2,
 
     return node_containing_next_move.placed_piece
 
-def evaluate(node, player):
-    opponent = alternate_player(player)
-
+def score_endgame(node, player, opponent):
     current_player_has_most_pieces = node.board.count_pieces(player) > node.board.count_pieces(opponent)
     opponent_has_most_pieces = node.board.count_pieces(player) < node.board.count_pieces(opponent)
 
+    if current_player_has_most_pieces:
+        return 10000000
+    elif opponent_has_most_pieces:
+        return -10000000
+    else: # game is a draw
+        return 0
+
+def score_opening(node, player, opponent):
+    return -node.board.count_pieces(player)
+
+def evaluate(node, player):
+    opponent = alternate_player(player)
+
     if node.board.game_is_over(player):
-        if current_player_has_most_pieces:
-            return 10000000
-        elif opponent_has_most_pieces:
-            return -10000000
-        else: # game is a draw
-            return 0
+        return score_endgame(node, player, opponent)
     else:
-        return node.board.count_pieces(player) 
+        if is_opening_game(node.board):
+            return score_opening(node, player, opponent) 
+        else:
+            return node.board.count_pieces(player) 
 
 terminal_node = namedtuple('terminal_node', ['node', 'val'])
+
+def is_opening_game(board):
+    all_pieces = board.count_pieces(board.BLACK) + board.count_pieces(board.WHITE)
+    return all_pieces < 24
 
 def minimax(node, max_player=None, min_player=None):
     """
