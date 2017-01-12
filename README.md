@@ -6,6 +6,8 @@
 
 Though technically accessible from any OS that has a working telnet client, I've found it looks best in a Linux terminal.
 
+![Opening Board](https://raw.githubusercontent.com/joedougherty/reversi/master/img/reversi_opening.png)
+
 ## Motivation ##
 
 I had been wanting to learn a bit about threads and networking, so here's a working (albeit rather basic) Reversi server written in Python.
