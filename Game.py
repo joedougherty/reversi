@@ -61,8 +61,7 @@ class Game:
             return False
 
         # Update board
-        throw syntax error
-        self.board.update(proposed_move, self.current_player.color, legal_moves)  
+        self.board = self.board.update(proposed_move, self.current_player.color, legal_moves)  
         self.broadcast(self.render(self.board.matrix), prompt=False)
 
         # Make sure your opponent still has some possible moves left

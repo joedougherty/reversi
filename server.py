@@ -1,15 +1,14 @@
-import socket, threading 
+#!/usr/bin/env python
+import argparse
 from collections import namedtuple
-from Game import Game
-import sys
 from datetime import datetime
+import socket, threading 
+import sys
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('', 1911))
-s.listen(4) 
+from Game import Game
+
 clients = []
 lock = threading.Lock()
-
 games = {}
 
 class gameServer(threading.Thread):
@@ -132,7 +131,7 @@ class gameServer(threading.Thread):
             all_commands += '{}: {}\n'.format(key, self.COMMANDS.get(key).get('help'))
         self.pretty_send(all_commands)
 
-    def create_game(self, args=[]):
+    def create_game(self, args=[], ai=False):
         if args == []:
             self.pretty_send("Please provide a name for the game. Usage: create <game name>")
             return False
@@ -144,7 +143,7 @@ class gameServer(threading.Thread):
             self.pretty_send("You can only create one game at a time!")
             return False
 
-        game = Game(player_one=self)
+        game = Game(player_one=self, ai=ai)
 
         # Ensure users can't add a game that already exists (by name) !!
         if games.get(game_name):
@@ -253,5 +252,15 @@ class gameServer(threading.Thread):
     def you_are_player_two(self):
         return self.current_game and self.current_game.player_two == self
 
-while True: # wait for socket to connect
-    gameServer(s.accept()).start()
+if __name__ == '__main__':
+    desc = """ Run a Reversi telnet server! """
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument("-p", "--port", required=False, type=int, help="Port number to run on.", default=1911)
+    args = parser.parse_args()
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('', args.port))
+    s.listen(4) 
+
+    while True: # wait for socket to connect
+        gameServer(s.accept()).start()
