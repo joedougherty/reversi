@@ -2,7 +2,7 @@
 import argparse
 from collections import namedtuple
 from datetime import datetime
-import socket, threading 
+import socket, threading
 import sys
 
 from Game import Game
@@ -25,15 +25,15 @@ class gameServer(threading.Thread):
                 {'help': "Join a game. Usage: 'join <game name>'", 'command': self.join_game},
             'bail':
                 {'help': "Bail on a created game that no one else has joined. :(", 'command': self.bail},
-            'name': 
+            'name':
                 {'help': "Set your name! Usage: 'name <desired name>'", 'command': self.set_name},
             'whoami':
                 {'help': "Learn your current identity!", 'command': self.whoami},
             'players':
                 {'help': 'List all the current players on the server.', 'command': self.list_players},
             }
-        
-        # Flag to maintain whether player is 
+
+        # Flag to maintain whether player is
         # in a game and expected to propose a move
         self.is_current_player = False
 
@@ -69,7 +69,7 @@ class gameServer(threading.Thread):
         if self.current_game:
             self.clean_up()
         clients.remove(self)
-        
+
         lock.release()
 
     def welcome(self):
@@ -100,10 +100,10 @@ class gameServer(threading.Thread):
             self.COMMANDS.get(user_command[0]).get('command')(user_command[1:])
 
     def route_input(self, data, reference_to_player):
-        """ 
+        """
         If the user is playing a game, their input should only be sent
-        to that game. 
-        
+        to that game.
+
         This prevents users from creating concurrent games, and generally helps
         to avoid some tricky input issues.
         """
@@ -124,7 +124,7 @@ class gameServer(threading.Thread):
                     player_two = None
                 game_list += "{} :: player_one->{} | player_two->{}\n".format(game, games[game].player_one.player_name, player_two)
             self.pretty_send(game_list)
-        
+
     def help(self, *args):
         all_commands = ''
         for key in self.COMMANDS.keys():
@@ -139,7 +139,7 @@ class gameServer(threading.Thread):
         game_name = args[0].strip()
 
         # User can only create one game at a time!
-        if self.current_game: 
+        if self.current_game:
             self.pretty_send("You can only create one game at a time!")
             return False
 
@@ -166,7 +166,7 @@ class gameServer(threading.Thread):
             return False
 
         # User can only create one game at a time!
-        if self.current_game: 
+        if self.current_game:
             self.pretty_send("You need to wait for your first game to start!")
             return False
 
@@ -182,7 +182,7 @@ class gameServer(threading.Thread):
             self.current_game = games[game_name]
             self.current_game_name = game_name
             self.play_game(games[game_name])
-        
+
     def play_game(self, game):
         game.start()
 
@@ -260,7 +260,7 @@ if __name__ == '__main__':
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('', args.port))
-    s.listen(4) 
+    s.listen(4)
 
     while True: # wait for socket to connect
         gameServer(s.accept()).start()
